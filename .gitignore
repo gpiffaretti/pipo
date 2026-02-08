@@ -1,3 +1,6 @@
 # Ignore markdown files only in the repo root
 /*.md
 !/README.md
+
+# IDE
+.idea/

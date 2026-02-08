@@ -24,6 +24,17 @@ With Metro running, open a new terminal window/pane from the root of your React 
 
 ### Android
 
+Quick local dev checklist (Windows):
+
+```sh
+where.exe adb
+where.exe emulator
+adb version
+emulator -list-avds
+```
+
+If `emulator -list-avds` is empty, open Android Studio and create a virtual device in Device Manager.
+
 ```sh
 # Using npm
 npm run android
