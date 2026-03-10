@@ -137,23 +137,28 @@
         "Photo capture from camera or gallery selection",
         "Video capture from camera or gallery selection",
         "Audio recording for voice notes",
-        "Local compression of media before upload",
-        "Compressed local cache for playback",
-        "Media upload queue with retry logic",
+        "Upload ORIGINAL full-quality media (no compression on upload)",
+        "Generate and cache compressed local copy for playback",
+        "Media upload queue with retry logic and resumable uploads",
         "Progress indicators for media uploads",
-        "Media preview in message bubbles"
+        "Media preview in message bubbles using compressed local copy",
+        "Re-download original high-quality asset on demand",
+        "Storage of both original and compressed file metadata"
       ],
       "deliverables": [
         "Users can attach photos, videos, and audio to messages",
-        "Original quality uploaded, compressed copy cached locally",
-        "Upload queue handles failures and retries"
+        "Original full-quality uploaded to R2, compressed copy cached locally",
+        "Upload queue handles failures and retries",
+        "Users can re-download original quality at any time"
       ],
       "tests": [
         "Media capture flow tests",
-        "Compression quality tests",
+        "Original quality upload verification tests",
+        "Compression quality tests for local cache",
         "Upload queue unit tests",
         "Local cache read/write tests",
-        "Media playback tests"
+        "Media playback tests (compressed version)",
+        "Re-download original quality tests"
       ]
     },
     {
@@ -168,7 +173,7 @@
         "backend": ["NodeJS", "Express", "TypeScript"],
         "auth": ["Clerk SDK for Node"],
         "database": ["Neon (Postgres)", "Drizzle ORM"],
-        "validation": ["Zod or Joi"],
+        "validation": ["Zod"],
         "testing": ["Jest", "Supertest"]
       },
       "features": [
@@ -200,8 +205,9 @@
           "chats (id, name, created_by, created_at, updated_at, deleted_at)",
           "chat_members (id, chat_id, user_id, role, joined_at, left_at)",
           "messages (id, chat_id, sender_id, content, type, created_at, updated_at, deleted_at)",
-          "media_attachments (id, message_id, storage_key, mime_type, size_bytes, duration_seconds, created_at)",
-          "invites (id, chat_id, created_by, token, expires_at, max_uses, used_count, created_at)"
+          "media_attachments (id, message_id, original_storage_key, compressed_storage_key, mime_type, original_size_bytes, compressed_size_bytes, width, height, duration_seconds, created_at)",
+          "invites (id, chat_id, created_by, token, expires_at, max_uses, used_count, created_at)",
+          "public_share_links (id, media_attachment_id, share_token, created_by, expires_at, access_count, revoked_at, created_at)"
         ]
       }
     },
@@ -209,9 +215,10 @@
       "id": "phase-5",
       "name": "Cloudflare R2 Media Storage Integration",
       "objectives": [
-        "Configure Cloudflare R2 bucket for media storage",
+        "Configure Cloudflare R2 bucket for high-quality media storage",
         "Implement presigned URL generation for secure uploads",
-        "Build media upload and retrieval endpoints"
+        "Build media upload, retrieval, and public sharing endpoints",
+        "Support re-download of original quality assets"
       ],
       "technologies": {
         "backend": ["NodeJS", "Express"],
@@ -220,24 +227,33 @@
         "testing": ["Jest", "Supertest"]
       },
       "features": [
-        "R2 bucket configuration with CORS",
+        "R2 bucket configuration with CORS and lifecycle rules",
         "Presigned URL endpoint for uploads (POST /api/media/upload-url)",
-        "Media metadata storage in Postgres",
-        "Presigned URL endpoint for downloads (GET /api/media/:id/download-url)",
+        "Store both original and compressed file metadata in Postgres (file_size, mime_type, dimensions, duration)",
+        "Presigned URL endpoint for authenticated downloads (GET /api/media/:id/download-url?quality=original|compressed)",
+        "Public share link generation with time-limited access (POST /api/media/:id/share)",
+        "Time-limited presigned URLs for public sharing (configurable expiration: 1-24 hours)",
+        "Share link revocation endpoint (DELETE /api/media/share/:shareId)",
         "Upload completion webhook/callback",
-        "File type and size validation",
-        "Encryption at rest configuration"
+        "File type and size validation (preserve original quality)",
+        "Encryption at rest configuration",
+        "Track share link usage and analytics"
       ],
       "deliverables": [
-        "Mobile app can upload media to R2 via presigned URLs",
-        "Media retrieval works with presigned download URLs",
-        "Media metadata tracked in database"
+        "Mobile app uploads original full-quality media to R2 via presigned URLs",
+        "Users can download original or compressed versions",
+        "Users can generate time-limited public share links",
+        "Public share links expire automatically after configured duration",
+        "Media metadata (original + compressed) tracked in database"
       ],
       "tests": [
-        "Presigned URL generation tests",
-        "Upload flow integration tests",
-        "Download URL access control tests",
-        "File validation tests"
+        "Presigned URL generation tests (upload and download)",
+        "Upload flow integration tests (original quality preservation)",
+        "Download URL access control tests (authenticated vs public)",
+        "Public share link generation and expiration tests",
+        "Share link revocation tests",
+        "File validation tests (type, size, quality)",
+        "Original vs compressed download tests"
       ]
     },
     {
@@ -432,6 +448,50 @@
         "Digest eligibility tests (activity check)",
         "Notification delivery tests",
         "Permission flow tests"
+      ]
+    },
+    {
+      "id": "phase-10a",
+      "name": "Public Media Sharing & High-Quality Downloads",
+      "objectives": [
+        "Build UI for generating public share links with time-limited access",
+        "Implement high-quality media re-download functionality",
+        "Enable sharing memories with non-app users"
+      ],
+      "technologies": {
+        "mobile": ["React Native", "TypeScript"],
+        "backend": ["NodeJS", "Express"],
+        "sharing": ["React Native Share API"],
+        "testing": ["Jest", "React Native Testing Library"]
+      },
+      "features": [
+        "Media detail view with sharing options",
+        "Generate public share link UI (configurable expiration: 1, 6, 12, 24 hours)",
+        "Share link via system share sheet (WhatsApp, email, SMS, etc.)",
+        "Copy share link to clipboard",
+        "View active share links for a media item",
+        "Revoke share link functionality",
+        "Download original quality button in media viewer",
+        "Download progress indicator for high-quality downloads",
+        "Local storage management (delete compressed cache, keep original)",
+        "Public share link landing page (web view for non-app users)",
+        "Share link analytics (view count, last accessed)",
+        "Quality selector UI (compressed for playback, original for download/share)"
+      ],
+      "deliverables": [
+        "Users can generate time-limited public share links for any media",
+        "Share links work for non-app users via web browser",
+        "Users can re-download original quality at any time",
+        "Share links expire automatically after configured duration",
+        "Users can manage and revoke active share links"
+      ],
+      "tests": [
+        "Share link generation flow tests",
+        "Expiration time selection tests",
+        "Share link revocation tests",
+        "Original quality download tests",
+        "Public landing page rendering tests",
+        "Share analytics tracking tests"
       ]
     },
     {
@@ -740,27 +800,31 @@
   "cross_cutting_concerns": {
     "accessibility": "Ensure WCAG 2.1 AA compliance for all UI components, screen reader support, and sufficient color contrast",
     "internationalization": "Design with i18n in mind for future multi-language support (use i18next or similar)",
-    "analytics": "Track key metrics: DAU/MAU, message send rate, media upload success rate, retention, invite conversion",
-    "compliance": "GDPR and CCPA compliance for data privacy, user data export/deletion capabilities",
-    "documentation": "Maintain API documentation, architecture decision records (ADRs), and developer onboarding guides"
+    "analytics": "Track key metrics: DAU/MAU, message send rate, media upload success rate (original quality), original vs compressed downloads, public share link generation/usage, retention, invite conversion, storage usage per user/chat",
+    "compliance": "GDPR and CCPA compliance for data privacy, user data export/deletion capabilities, public share link privacy controls",
+    "documentation": "Maintain API documentation, architecture decision records (ADRs), and developer onboarding guides",
+    "media_quality": "Preserve original quality for all uploads (photos, videos, audio), generate compressed versions only for local playback, educate users about storage of precious memories"
   },
   "infrastructure_recommendations": {
     "backend_hosting": "Vercel (for serverless API), Railway, Render, or AWS ECS/Fargate",
     "database": "Neon Postgres with connection pooling (PgBouncer)",
-    "media_storage": "Cloudflare R2 with CDN for faster global access",
-    "monitoring": "Sentry for error tracking, Datadog or New Relic for APM",
+    "media_storage": "Cloudflare R2 with CDN for faster global access - CRITICAL: Store original full-quality media without compression, separate buckets/prefixes for original vs compressed versions",
+    "storage_strategy": "Two-tier storage: (1) Original quality in R2 for long-term archival, (2) Compressed versions in R2 for app delivery and playback. Consider R2 storage classes for cost optimization.",
+    "cdn": "Cloudflare CDN for serving compressed media globally with low latency, presigned URLs for original quality downloads",
+    "monitoring": "Sentry for error tracking, Datadog or New Relic for APM, R2 storage metrics dashboard for capacity planning",
     "ci_cd": "GitHub Actions for automated testing and deployment",
-    "secrets_management": "Environment variables via hosting platform, or AWS Secrets Manager/HashiCorp Vault"
+    "secrets_management": "Environment variables via hosting platform, or AWS Secrets Manager/HashiCorp Vault",
+    "backup_strategy": "Regular database backups to separate storage, consider R2 cross-region replication for critical media durability"
   },
   "estimated_timeline": {
     "phase_0_to_3": "4-6 weeks (mobile foundation and UI)",
     "phase_4_to_5": "3-4 weeks (backend and database)",
     "phase_6_to_8": "4-5 weeks (auth, invites, roles)",
-    "phase_9_to_11": "4-5 weeks (sync, notifications, retention)",
-    "phase_12_to_14": "3-4 weeks (security, performance, error handling)",
+    "phase_9_to_10a": "5-6 weeks (sync, notifications, public sharing)",
+    "phase_11_to_14": "4-5 weeks (retention, security, performance, error handling)",
     "phase_15_to_16": "3-4 weeks (testing and beta)",
     "phase_17_to_18": "2-3 weeks (launch prep and post-launch)",
-    "total_estimated": "23-31 weeks (approximately 6-8 months)"
+    "total_estimated": "25-33 weeks (approximately 6-8 months)"
   },
   "risks_and_mitigations": {
     "risk_1": {
@@ -772,8 +836,8 @@
       "mitigation": "Use WebSocket connection pooling, implement rate limiting, consider message broker (Redis Pub/Sub) if needed"
     },
     "risk_3": {
-      "risk": "R2 storage costs escalate with high media volume",
-      "mitigation": "Implement media compression, set storage quotas per user/chat, monitor usage closely"
+      "risk": "R2 storage costs escalate with high-quality media volume (storing both original and compressed versions)",
+      "mitigation": "Monitor storage usage closely with alerts, implement storage quotas per user/chat, consider tiered pricing for power users, optimize compressed versions aggressively while preserving originals, implement storage analytics dashboard, consider lifecycle policies for rarely-accessed originals (move to cheaper storage class)"
     },
     "risk_4": {
       "risk": "Notification delivery unreliable across iOS/Android",
@@ -782,6 +846,18 @@
     "risk_5": {
       "risk": "Invite link abuse or spam",
       "mitigation": "Implement rate limiting on invite creation, expiration times, usage limits, and abuse reporting"
+    },
+    "risk_6": {
+      "risk": "Public share links abused or media leaked",
+      "mitigation": "Short expiration times (max 24 hours), require authentication for share link generation, track access patterns, implement abuse reporting, allow immediate revocation, no indexing by search engines (noindex meta tags)"
+    },
+    "risk_7": {
+      "risk": "Large original media files cause slow uploads/downloads on mobile networks",
+      "mitigation": "Implement chunked/resumable uploads (multipart), show clear progress indicators, allow background uploads, compress aggressively for local playback, educate users about WiFi recommendations for large files, implement upload size warnings"
+    },
+    "risk_8": {
+      "risk": "Users accidentally delete precious memories",
+      "mitigation": "30-day soft-delete retention window, clear restore UI, confirmation dialogs for deletions, consider 'archive' feature as alternative to delete, educate users about cloud backup benefits"
     }
   }
 }
