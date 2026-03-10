@@ -3,7 +3,8 @@
   "description": "A WhatsApp-like mobile app for storing and sharing valuable memories of children with trusted family members",
   "stack": {
     "mobile": ["React Native", "TypeScript"],
-    "auth": ["Clerk"],
+    "auth": ["Clerk (authentication only)"],
+    "in_app_purchases": ["RevenueCat"],
     "database": ["Neon (Postgres)", "Drizzle ORM"],
     "media_storage": ["Cloudflare R2 (S3-compatible)"],
     "backend_api": ["NodeJS", "Express"],
@@ -201,13 +202,14 @@
       ],
       "database_schema": {
         "tables": [
-          "users (id, clerk_user_id, email, display_name, created_at, updated_at)",
+          "users (id, clerk_user_id, email, display_name, revenuecat_customer_id, subscription_tier, created_at, updated_at)",
           "chats (id, name, created_by, created_at, updated_at, deleted_at)",
           "chat_members (id, chat_id, user_id, role, joined_at, left_at)",
           "messages (id, chat_id, sender_id, content, type, created_at, updated_at, deleted_at)",
           "media_attachments (id, message_id, original_storage_key, compressed_storage_key, mime_type, original_size_bytes, compressed_size_bytes, width, height, duration_seconds, created_at)",
           "invites (id, chat_id, created_by, token, expires_at, max_uses, used_count, created_at)",
-          "public_share_links (id, media_attachment_id, share_token, created_by, expires_at, access_count, revoked_at, created_at)"
+          "public_share_links (id, media_attachment_id, share_token, created_by, expires_at, access_count, revoked_at, created_at)",
+          "usage_tracking (id, user_id, period_start, period_end, messages_sent, media_uploaded_mb, storage_used_mb, created_at, updated_at)"
         ]
       }
     },
@@ -262,7 +264,7 @@
       "objectives": [
         "Integrate Clerk authentication in mobile app",
         "Implement sign-in flows (email, Google, Apple)",
-        "Build user profile and session management"
+        "Build user profile with free plan usage tracking"
       ],
       "technologies": {
         "mobile": ["React Native", "TypeScript"],
@@ -271,11 +273,13 @@
         "testing": ["Jest", "Detox (E2E)"]
       },
       "features": [
-        "Clerk SDK integration in React Native",
+        "Clerk SDK integration in React Native (authentication only)",
         "Sign-in with email/password",
         "Sign-in with Google",
         "Sign-in with Apple",
-        "User profile screen",
+        "User profile screen with usage statistics",
+        "Free plan usage display (messages sent, storage used, limits)",
+        "Usage progress bars and visual indicators",
         "Session persistence and refresh",
         "Auth token management for API calls",
         "Sign-out functionality",
@@ -285,14 +289,83 @@
         "Users can sign up and sign in via all methods",
         "Authentication state persists across app restarts",
         "API calls include valid auth tokens",
-        "Unauthenticated users redirected to sign-in"
+        "Unauthenticated users redirected to sign-in",
+        "Profile displays current free plan usage and limits"
       ],
       "tests": [
         "Auth flow integration tests",
         "Token refresh tests",
         "Protected route tests",
-        "Sign-out tests"
+        "Sign-out tests",
+        "Usage display tests"
       ]
+    },
+    {
+      "id": "phase-6a",
+      "name": "RevenueCat Integration & Subscription Management",
+      "objectives": [
+        "Integrate RevenueCat for in-app purchases",
+        "Implement subscription tiers (Free, Premium)",
+        "Build paywall and subscription management UI"
+      ],
+      "technologies": {
+        "mobile": ["React Native", "TypeScript"],
+        "iap": ["react-native-purchases (RevenueCat SDK)"],
+        "backend": ["NodeJS", "Express"],
+        "webhooks": ["RevenueCat webhooks"],
+        "testing": ["Jest", "Detox (E2E)"]
+      },
+      "features": [
+        "RevenueCat SDK integration in React Native",
+        "Configure offerings and products in RevenueCat dashboard",
+        "Free tier with usage limits (e.g., 100 messages/month, 500MB storage)",
+        "Premium tier with unlimited usage",
+        "Paywall UI triggered when limits reached",
+        "Subscription purchase flow (monthly/annual)",
+        "Restore purchases functionality",
+        "Subscription status display in profile",
+        "RevenueCat webhook handler for subscription events",
+        "Sync subscription status to database",
+        "Usage enforcement based on subscription tier",
+        "Graceful degradation when limits reached",
+        "Manage subscription UI (upgrade, cancel, billing)"
+      ],
+      "deliverables": [
+        "Users can purchase Premium subscription via in-app purchase",
+        "Users see usage limits in profile",
+        "Premium users have extra storage space and unlimited message count",
+        "Subscription status synced between RevenueCat and backend",
+        "Paywall appears when free tier limits reached"
+      ],
+      "tests": [
+        "RevenueCat SDK initialization tests",
+        "Purchase flow tests (sandbox)",
+        "Restore purchases tests",
+        "Webhook handler tests",
+        "Usage limit enforcement tests",
+        "Subscription status sync tests",
+        "Paywall display logic tests"
+      ],
+      "subscription_tiers": {
+        "free": {
+          "price": "$0",
+          "features": [
+            "Up to 100 messages per month",
+            "Up to 500MB storage",
+            "Up to 2 active chats"
+          ]
+        },
+        "premium": {
+          "price": "$4.99/month or $49.99/year",
+          "features": [
+            "Unlimited messages",
+            "Unlimited storage",
+            "Unlimited chats",
+            "Unlimited message history",
+            "Priority support"
+          ]
+        }
+      }
     },
     {
       "id": "phase-7",
@@ -800,7 +873,7 @@
   "cross_cutting_concerns": {
     "accessibility": "Ensure WCAG 2.1 AA compliance for all UI components, screen reader support, and sufficient color contrast",
     "internationalization": "Design with i18n in mind for future multi-language support (use i18next or similar)",
-    "analytics": "Track key metrics: DAU/MAU, message send rate, media upload success rate (original quality), original vs compressed downloads, public share link generation/usage, retention, invite conversion, storage usage per user/chat",
+    "analytics": "Track key metrics: DAU/MAU, message send rate, media upload success rate (original quality), original vs compressed downloads, public share link generation/usage, retention, invite conversion, storage usage per user/chat, subscription conversion rate, free tier limit hits, churn rate",
     "compliance": "GDPR and CCPA compliance for data privacy, user data export/deletion capabilities, public share link privacy controls",
     "documentation": "Maintain API documentation, architecture decision records (ADRs), and developer onboarding guides",
     "media_quality": "Preserve original quality for all uploads (photos, videos, audio), generate compressed versions only for local playback, educate users about storage of precious memories"
@@ -819,12 +892,13 @@
   "estimated_timeline": {
     "phase_0_to_3": "4-6 weeks (mobile foundation and UI)",
     "phase_4_to_5": "3-4 weeks (backend and database)",
-    "phase_6_to_8": "4-5 weeks (auth, invites, roles)",
+    "phase_6_to_6a": "5-6 weeks (auth, subscriptions, usage tracking)",
+    "phase_7_to_8": "3-4 weeks (invites, roles)",
     "phase_9_to_10a": "5-6 weeks (sync, notifications, public sharing)",
     "phase_11_to_14": "4-5 weeks (retention, security, performance, error handling)",
     "phase_15_to_16": "3-4 weeks (testing and beta)",
     "phase_17_to_18": "2-3 weeks (launch prep and post-launch)",
-    "total_estimated": "25-33 weeks (approximately 6-8 months)"
+    "total_estimated": "27-35 weeks (approximately 7-9 months)"
   },
   "risks_and_mitigations": {
     "risk_1": {
@@ -837,7 +911,11 @@
     },
     "risk_3": {
       "risk": "R2 storage costs escalate with high-quality media volume (storing both original and compressed versions)",
-      "mitigation": "Monitor storage usage closely with alerts, implement storage quotas per user/chat, consider tiered pricing for power users, optimize compressed versions aggressively while preserving originals, implement storage analytics dashboard, consider lifecycle policies for rarely-accessed originals (move to cheaper storage class)"
+      "mitigation": "Monitor storage usage closely with alerts, implement storage quotas per tier (500MB free, unlimited premium), use RevenueCat subscriptions to monetize storage, optimize compressed versions aggressively while preserving originals, implement storage analytics dashboard, consider lifecycle policies for rarely-accessed originals (move to cheaper storage class)"
+    },
+    "risk_3a": {
+      "risk": "Low conversion rate from free to premium tier",
+      "mitigation": "Implement strategic paywall placement, offer generous free tier to build habit, use RevenueCat experiments for A/B testing pricing, provide clear value proposition for premium, offer trial periods, send upgrade prompts at key moments (limit reached, high engagement)"
     },
     "risk_4": {
       "risk": "Notification delivery unreliable across iOS/Android",
