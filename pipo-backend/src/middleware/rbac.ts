@@ -16,7 +16,7 @@ export function requireChatRole(...allowedRoles: ChatRole[]) {
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.userId;
-      const chatId = req.params.chatId;
+      const chatId = req.params.chatId as string;
 
       if (!userId || !chatId) {
         res.status(400).json({ error: 'Missing user or chat identifier' });

@@ -113,7 +113,7 @@ router.get(
   resolveUser,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const quality = (req.query.quality as string) || 'compressed';
 
       const [attachment] = await db
@@ -155,7 +155,7 @@ router.post(
   validate(createShareLinkSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const { expiresInHours } = req.body;
 
       const [attachment] = await db
@@ -199,7 +199,7 @@ router.get(
   '/public/:shareToken',
   async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { shareToken } = req.params;
+      const shareToken = req.params.shareToken as string;
 
       const [shareLink] = await db
         .select()
@@ -262,7 +262,7 @@ router.delete(
   resolveUser,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { shareId } = req.params;
+      const shareId = req.params.shareId as string;
 
       const [shareLink] = await db
         .select()
@@ -299,7 +299,7 @@ router.get(
   resolveUser,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
 
       const shares = await db
         .select()

@@ -93,10 +93,11 @@ router.get(
   requireChatMember(),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
+      const chatId = req.params.chatId as string;
       const [chat] = await db
         .select()
         .from(chats)
-        .where(and(eq(chats.id, req.params.chatId), isNull(chats.deletedAt)))
+        .where(and(eq(chats.id, chatId), isNull(chats.deletedAt)))
         .limit(1);
 
       if (!chat) {
@@ -127,13 +128,14 @@ router.patch(
     try {
       const { name } = req.body;
 
+      const chatId = req.params.chatId as string;
       const [updated] = await db
         .update(chats)
         .set({
           ...(name && { name }),
           updatedAt: new Date(),
         })
-        .where(eq(chats.id, req.params.chatId))
+        .where(eq(chats.id, chatId))
         .returning();
 
       res.json({ chat: updated });
@@ -151,10 +153,11 @@ router.delete(
   requireChatRole('owner'),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
+      const chatId = req.params.chatId as string;
       await db
         .update(chats)
         .set({ deletedAt: new Date(), updatedAt: new Date() })
-        .where(eq(chats.id, req.params.chatId));
+        .where(eq(chats.id, chatId));
 
       res.status(204).send();
     } catch (error) {

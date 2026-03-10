@@ -18,7 +18,7 @@ router.post(
   validate(createMessageSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { chatId } = req.params;
+      const chatId = req.params.chatId as string;
       const { content, type } = req.body;
 
       const [message] = await db
@@ -67,8 +67,8 @@ router.get(
   validate(paginationSchema, 'query'),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { chatId } = req.params;
-      const { limit, cursor } = req.query as { limit: number; cursor?: string };
+      const chatId = req.params.chatId as string;
+      const { limit, cursor } = req.query as unknown as { limit: number; cursor?: string };
 
       const conditions = [eq(messages.chatId, chatId), isNull(messages.deletedAt)];
 
@@ -122,7 +122,7 @@ router.get(
   requireChatMember(),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { messageId } = req.params;
+      const messageId = req.params.messageId as string;
 
       const [message] = await db
         .select()
@@ -155,7 +155,7 @@ router.delete(
   requireChatMember(),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { messageId } = req.params;
+      const messageId = req.params.messageId as string;
 
       const [message] = await db
         .select()
