@@ -1,0 +1,787 @@
+{
+  "project": "Pipo - Memory Sharing Mobile App",
+  "description": "A WhatsApp-like mobile app for storing and sharing valuable memories of children with trusted family members",
+  "stack": {
+    "mobile": ["React Native", "TypeScript"],
+    "auth": ["Clerk"],
+    "database": ["Neon (Postgres)", "Drizzle ORM"],
+    "media_storage": ["Cloudflare R2 (S3-compatible)"],
+    "backend_api": ["NodeJS", "Express"],
+    "additional_libraries": [
+      "React Navigation (navigation)",
+      "SQLite (local persistence)",
+      "NetInfo (connectivity detection)",
+      "react-native-image-picker or VisionCamera (media capture)",
+      "react-native-fs (file system)",
+      "FCM/APNs (push notifications)",
+      "QR code generator/scanner library"
+    ]
+  },
+  "phases": [
+    {
+      "id": "phase-0",
+      "name": "Project Foundation & Development Environment",
+      "objectives": [
+        "Establish React Native project with TypeScript",
+        "Configure development tooling and CI/CD pipeline",
+        "Ensure app builds and runs on both iOS and Android"
+      ],
+      "technologies": {
+        "mobile": ["React Native CLI or Expo", "TypeScript"],
+        "tooling": ["Jest", "ESLint", "Prettier", "Metro bundler"],
+        "ci_cd": ["GitHub Actions or similar"]
+      },
+      "features": [
+        "Hello-world screen displaying app name",
+        "Basic navigation scaffold (React Navigation setup)",
+        "TypeScript configuration with strict mode",
+        "Linting and formatting rules configured"
+      ],
+      "deliverables": [
+        "App successfully builds on iOS simulator/device",
+        "App successfully builds on Android emulator/device",
+        "CI pipeline runs tests and linting",
+        "README with setup instructions"
+      ],
+      "tests": [
+        "Jest smoke test verifying app renders",
+        "Lint and format checks pass in CI",
+        "Build verification for both platforms"
+      ]
+    },
+    {
+      "id": "phase-1",
+      "name": "Chat UI Skeleton (No Backend)",
+      "objectives": [
+        "Build WhatsApp-like chat interface with mock data",
+        "Implement chat list and individual chat screens",
+        "Create message rendering for all media types"
+      ],
+      "technologies": {
+        "mobile": ["React Native", "TypeScript", "React Navigation"],
+        "ui_components": ["FlatList", "TextInput", "TouchableOpacity"],
+        "testing": ["React Native Testing Library", "Jest"]
+      },
+      "features": [
+        "Chat list screen showing multiple chats with preview",
+        "Individual chat screen with message history",
+        "Message bubble rendering (text, audio placeholder, photo, video)",
+        "Message input UI with send button",
+        "Timestamp display for messages",
+        "Mock data structure for chats and messages",
+        "Navigation between chat list and chat detail"
+      ],
+      "deliverables": [
+        "Fully navigable chat UI with mock data",
+        "WhatsApp-like visual design and interactions",
+        "Responsive layout for different screen sizes"
+      ],
+      "tests": [
+        "Snapshot tests for chat list and chat screens",
+        "Component tests for message bubbles",
+        "Navigation flow tests",
+        "RTL tests for message rendering states"
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Local Persistence & Offline-First Architecture",
+      "objectives": [
+        "Implement local SQLite database for chats and messages",
+        "Build offline message queue with automatic retry",
+        "Handle connectivity state changes gracefully"
+      ],
+      "technologies": {
+        "mobile": ["React Native", "TypeScript"],
+        "storage": ["SQLite (react-native-sqlite-storage or Expo SQLite)"],
+        "connectivity": ["@react-native-community/netinfo"],
+        "testing": ["Jest"]
+      },
+      "features": [
+        "Local SQLite schema for chats, messages, and queue",
+        "Message send queue with pending/sent/failed states",
+        "Automatic retry on connectivity restoration",
+        "Optimistic UI updates for sent messages",
+        "Connectivity indicator in UI",
+        "Local message persistence and retrieval"
+      ],
+      "deliverables": [
+        "Messages persist locally across app restarts",
+        "Offline messages queue and retry automatically",
+        "UI reflects message send status accurately"
+      ],
+      "tests": [
+        "Queue enqueue/dequeue unit tests",
+        "Connectivity transition tests (online/offline)",
+        "SQLite CRUD operation tests",
+        "Message state transition tests"
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Media Capture & Local Processing",
+      "objectives": [
+        "Enable photo, video, and audio capture/selection",
+        "Implement local media compression and caching",
+        "Build media upload queue infrastructure"
+      ],
+      "technologies": {
+        "mobile": ["React Native", "TypeScript"],
+        "media_capture": ["react-native-image-picker or react-native-vision-camera"],
+        "audio": ["react-native-audio-recorder-player"],
+        "file_system": ["react-native-fs"],
+        "compression": ["react-native-compressor or ffmpeg-kit-react-native (optional)"],
+        "testing": ["Jest"]
+      },
+      "features": [
+        "Photo capture from camera or gallery selection",
+        "Video capture from camera or gallery selection",
+        "Audio recording for voice notes",
+        "Local compression of media before upload",
+        "Compressed local cache for playback",
+        "Media upload queue with retry logic",
+        "Progress indicators for media uploads",
+        "Media preview in message bubbles"
+      ],
+      "deliverables": [
+        "Users can attach photos, videos, and audio to messages",
+        "Original quality uploaded, compressed copy cached locally",
+        "Upload queue handles failures and retries"
+      ],
+      "tests": [
+        "Media capture flow tests",
+        "Compression quality tests",
+        "Upload queue unit tests",
+        "Local cache read/write tests",
+        "Media playback tests"
+      ]
+    },
+    {
+      "id": "phase-4",
+      "name": "Backend Foundation & Database Schema",
+      "objectives": [
+        "Set up NodeJS/Express backend with Clerk authentication",
+        "Design and implement Neon Postgres schema with Drizzle ORM",
+        "Create core API endpoints for chats and messages"
+      ],
+      "technologies": {
+        "backend": ["NodeJS", "Express", "TypeScript"],
+        "auth": ["Clerk SDK for Node"],
+        "database": ["Neon (Postgres)", "Drizzle ORM"],
+        "validation": ["Zod or Joi"],
+        "testing": ["Jest", "Supertest"]
+      },
+      "features": [
+        "Express server with TypeScript",
+        "Clerk middleware for authentication",
+        "Drizzle schema for users, chats, chat_members, messages, media_attachments",
+        "Database migrations setup",
+        "CRUD endpoints for chats (create, list, get)",
+        "CRUD endpoints for messages (create, list, get)",
+        "Role-based access control middleware",
+        "Error handling and logging",
+        "API versioning structure"
+      ],
+      "deliverables": [
+        "Backend API running and accessible",
+        "Database schema deployed to Neon",
+        "API documentation (OpenAPI/Swagger)",
+        "Authenticated endpoints functional"
+      ],
+      "tests": [
+        "Database migration tests",
+        "API integration tests for all endpoints",
+        "Authentication middleware tests",
+        "Access control tests for different roles"
+      ],
+      "database_schema": {
+        "tables": [
+          "users (id, clerk_user_id, email, display_name, created_at, updated_at)",
+          "chats (id, name, created_by, created_at, updated_at, deleted_at)",
+          "chat_members (id, chat_id, user_id, role, joined_at, left_at)",
+          "messages (id, chat_id, sender_id, content, type, created_at, updated_at, deleted_at)",
+          "media_attachments (id, message_id, storage_key, mime_type, size_bytes, duration_seconds, created_at)",
+          "invites (id, chat_id, created_by, token, expires_at, max_uses, used_count, created_at)"
+        ]
+      }
+    },
+    {
+      "id": "phase-5",
+      "name": "Cloudflare R2 Media Storage Integration",
+      "objectives": [
+        "Configure Cloudflare R2 bucket for media storage",
+        "Implement presigned URL generation for secure uploads",
+        "Build media upload and retrieval endpoints"
+      ],
+      "technologies": {
+        "backend": ["NodeJS", "Express"],
+        "storage": ["Cloudflare R2", "AWS SDK v3 (S3-compatible)"],
+        "auth": ["Clerk"],
+        "testing": ["Jest", "Supertest"]
+      },
+      "features": [
+        "R2 bucket configuration with CORS",
+        "Presigned URL endpoint for uploads (POST /api/media/upload-url)",
+        "Media metadata storage in Postgres",
+        "Presigned URL endpoint for downloads (GET /api/media/:id/download-url)",
+        "Upload completion webhook/callback",
+        "File type and size validation",
+        "Encryption at rest configuration"
+      ],
+      "deliverables": [
+        "Mobile app can upload media to R2 via presigned URLs",
+        "Media retrieval works with presigned download URLs",
+        "Media metadata tracked in database"
+      ],
+      "tests": [
+        "Presigned URL generation tests",
+        "Upload flow integration tests",
+        "Download URL access control tests",
+        "File validation tests"
+      ]
+    },
+    {
+      "id": "phase-6",
+      "name": "Authentication & User Management",
+      "objectives": [
+        "Integrate Clerk authentication in mobile app",
+        "Implement sign-in flows (email, Google, Apple)",
+        "Build user profile and session management"
+      ],
+      "technologies": {
+        "mobile": ["React Native", "TypeScript"],
+        "auth": ["@clerk/clerk-expo or @clerk/clerk-react"],
+        "backend": ["Clerk Node SDK"],
+        "testing": ["Jest", "Detox (E2E)"]
+      },
+      "features": [
+        "Clerk SDK integration in React Native",
+        "Sign-in with email/password",
+        "Sign-in with Google",
+        "Sign-in with Apple",
+        "User profile screen",
+        "Session persistence and refresh",
+        "Auth token management for API calls",
+        "Sign-out functionality",
+        "Protected route navigation"
+      ],
+      "deliverables": [
+        "Users can sign up and sign in via all methods",
+        "Authentication state persists across app restarts",
+        "API calls include valid auth tokens",
+        "Unauthenticated users redirected to sign-in"
+      ],
+      "tests": [
+        "Auth flow integration tests",
+        "Token refresh tests",
+        "Protected route tests",
+        "Sign-out tests"
+      ]
+    },
+    {
+      "id": "phase-7",
+      "name": "Invite System (QR Codes & Links)",
+      "objectives": [
+        "Implement invite generation with QR codes and shareable links",
+        "Build invite acceptance flow",
+        "Support cross-country invitations via links"
+      ],
+      "technologies": {
+        "mobile": ["React Native", "TypeScript"],
+        "qr": ["react-native-qrcode-svg", "react-native-camera or expo-camera"],
+        "deep_linking": ["React Navigation deep linking"],
+        "backend": ["NodeJS", "Express"],
+        "testing": ["Jest"]
+      },
+      "features": [
+        "Generate invite tokens with expiration and usage limits",
+        "QR code generation for in-person invites",
+        "Shareable invite link generation (pipo://invite/TOKEN or https://pipo.app/invite/TOKEN)",
+        "QR code scanner in mobile app",
+        "Deep link handling for invite links",
+        "Invite acceptance flow (join chat as member)",
+        "Invite revocation by owner/admin",
+        "Invite list and management UI",
+        "Share invite link via system share sheet"
+      ],
+      "deliverables": [
+        "Users can generate QR codes for chat invites",
+        "Users can generate and share invite links",
+        "Recipients can scan QR or click link to join chat",
+        "Invite tokens validated and tracked server-side"
+      ],
+      "tests": [
+        "Invite token generation and validation tests",
+        "QR code generation tests",
+        "Deep link handling tests",
+        "Invite expiration tests",
+        "Usage limit enforcement tests"
+      ]
+    },
+    {
+      "id": "phase-8",
+      "name": "Chat Roles & Access Control",
+      "objectives": [
+        "Implement role-based permissions (Owner, Admin, Member)",
+        "Enforce access control on all operations",
+        "Build member management UI"
+      ],
+      "technologies": {
+        "mobile": ["React Native", "TypeScript"],
+        "backend": ["NodeJS", "Express"],
+        "database": ["Neon (Postgres)", "Drizzle ORM"],
+        "testing": ["Jest", "Supertest"]
+      },
+      "features": [
+        "Role assignment on chat creation (creator = Owner)",
+        "Role assignment on invite acceptance (default = Member)",
+        "Permission matrix enforcement (who can invite, remove, delete messages, etc.)",
+        "Member list UI in chat settings",
+        "Role change UI (Admin/Owner can promote/demote)",
+        "Member removal by Owner/Admin",
+        "Leave chat functionality",
+        "Immediate access revocation on removal/leave",
+        "Backend middleware for permission checks"
+      ],
+      "deliverables": [
+        "Role-based permissions enforced on all operations",
+        "Owners and Admins can manage members",
+        "Removed users lose access immediately",
+        "UI reflects user's role and permissions"
+      ],
+      "tests": [
+        "Permission enforcement tests for each role",
+        "Access revocation tests",
+        "Role change tests",
+        "Member removal tests"
+      ],
+      "permission_matrix": {
+        "Owner": ["invite", "remove_members", "change_roles", "delete_chat", "send_messages", "delete_own_messages"],
+        "Admin": ["invite", "remove_members", "send_messages", "delete_own_messages"],
+        "Member": ["send_messages", "delete_own_messages", "leave_chat"]
+      }
+    },
+    {
+      "id": "phase-9",
+      "name": "Real-time Sync & Message Delivery",
+      "objectives": [
+        "Implement real-time message synchronization",
+        "Build efficient polling or WebSocket mechanism",
+        "Sync messages across chat members"
+      ],
+      "technologies": {
+        "mobile": ["React Native", "TypeScript"],
+        "backend": ["NodeJS", "Express"],
+        "realtime": ["WebSockets (ws or Socket.io) or Server-Sent Events", "Polling as fallback"],
+        "testing": ["Jest"]
+      },
+      "features": [
+        "WebSocket connection for real-time updates (or polling)",
+        "Message delivery to all chat members",
+        "Read receipts (optional, TBD)",
+        "Typing indicators (optional, TBD)",
+        "Sync on app foreground/background transitions",
+        "Conflict resolution for offline edits",
+        "Message ordering and deduplication"
+      ],
+      "deliverables": [
+        "Messages appear in real-time for all chat members",
+        "Offline messages sync when connectivity restored",
+        "No duplicate messages in UI"
+      ],
+      "tests": [
+        "WebSocket connection tests",
+        "Message delivery tests",
+        "Sync conflict resolution tests",
+        "Deduplication tests"
+      ]
+    },
+    {
+      "id": "phase-10",
+      "name": "Daily Digest Push Notifications",
+      "objectives": [
+        "Implement daily digest notifications at 9:00 PM local time",
+        "Ensure generic notifications with no message previews",
+        "Build notification scheduling system"
+      ],
+      "technologies": {
+        "mobile": ["React Native", "TypeScript"],
+        "push": ["Firebase Cloud Messaging (FCM)", "Apple Push Notification Service (APNs)", "@react-native-firebase/messaging or Expo Notifications"],
+        "backend": ["NodeJS", "Express"],
+        "scheduler": ["node-cron or Bull queue", "Timezone handling library (luxon or date-fns-tz)"],
+        "testing": ["Jest"]
+      },
+      "features": [
+        "Device token registration and storage",
+        "User timezone detection and storage",
+        "Daily digest scheduler (runs at 9:00 PM user local time)",
+        "Activity check since last digest",
+        "Generic notification message (no chat titles or previews)",
+        "Notification delivery via FCM/APNs",
+        "Notification permission request flow",
+        "Notification settings UI (enable/disable)",
+        "Deep link from notification to app"
+      ],
+      "deliverables": [
+        "Users receive one daily digest at 9:00 PM if there was activity",
+        "Notifications are generic with no sensitive content",
+        "Users can enable/disable notifications"
+      ],
+      "tests": [
+        "Scheduler logic tests (timezone handling)",
+        "Digest eligibility tests (activity check)",
+        "Notification delivery tests",
+        "Permission flow tests"
+      ]
+    },
+    {
+      "id": "phase-11",
+      "name": "Soft Delete & 30-Day Retention",
+      "objectives": [
+        "Implement soft-delete for messages and media",
+        "Build 30-day retention and hard-delete system",
+        "Align R2 lifecycle with retention policy"
+      ],
+      "technologies": {
+        "backend": ["NodeJS", "Express"],
+        "database": ["Neon (Postgres)", "Drizzle ORM"],
+        "storage": ["Cloudflare R2 lifecycle rules"],
+        "scheduler": ["node-cron or Bull queue"],
+        "testing": ["Jest"]
+      },
+      "features": [
+        "Soft-delete flag (deleted_at timestamp) on messages and chats",
+        "Soft-deleted content hidden from UI",
+        "Restore functionality for soft-deleted content (within 30 days)",
+        "Hard-delete job runs daily to purge content older than 30 days",
+        "R2 lifecycle rule to delete media after 30 days of soft-delete",
+        "Audit log for deletions and restorations",
+        "Delete confirmation UI",
+        "Restore UI for eligible content"
+      ],
+      "deliverables": [
+        "Deleted messages/chats soft-deleted and hidden",
+        "Content restorable within 30-day window",
+        "Hard-delete automatically purges after 30 days",
+        "R2 media cleaned up in sync with database"
+      ],
+      "tests": [
+        "Soft-delete flag tests",
+        "Retention window calculation tests",
+        "Hard-delete job tests",
+        "Restore functionality tests",
+        "Access revocation tests"
+      ]
+    },
+    {
+      "id": "phase-12",
+      "name": "Security Hardening & Encryption",
+      "objectives": [
+        "Implement encryption at rest and in transit",
+        "Ensure compliance with 'standard protection' security model",
+        "Conduct security audit and penetration testing"
+      ],
+      "technologies": {
+        "backend": ["NodeJS", "Express"],
+        "encryption": ["TLS/SSL certificates", "Neon encryption at rest", "R2 encryption at rest"],
+        "security": ["Helmet.js", "Rate limiting (express-rate-limit)", "CORS configuration"],
+        "testing": ["OWASP ZAP or similar security testing tools"]
+      },
+      "features": [
+        "TLS/SSL for all API communication",
+        "Neon database encryption at rest enabled",
+        "R2 bucket encryption at rest enabled",
+        "API rate limiting to prevent abuse",
+        "Input validation and sanitization",
+        "SQL injection prevention (via ORM)",
+        "XSS protection headers",
+        "CSRF protection for web endpoints (if any)",
+        "Security headers (Helmet.js)",
+        "Audit logging for sensitive operations"
+      ],
+      "deliverables": [
+        "All data encrypted in transit (TLS)",
+        "All data encrypted at rest (Neon + R2)",
+        "API protected against common vulnerabilities",
+        "Security audit report with remediation"
+      ],
+      "tests": [
+        "TLS configuration tests",
+        "Rate limiting tests",
+        "Input validation tests",
+        "Security header tests",
+        "Penetration testing results"
+      ]
+    },
+    {
+      "id": "phase-13",
+      "name": "Performance Optimization & Caching",
+      "objectives": [
+        "Optimize app performance for smooth UX",
+        "Implement caching strategies for media and data",
+        "Reduce API latency and improve load times"
+      ],
+      "technologies": {
+        "mobile": ["React Native", "TypeScript"],
+        "caching": ["React Query or SWR", "AsyncStorage", "SQLite"],
+        "backend": ["NodeJS", "Express"],
+        "cdn": ["Cloudflare CDN (if needed)"],
+        "monitoring": ["Sentry or similar"],
+        "testing": ["React Native Performance Monitor", "Lighthouse"]
+      },
+      "features": [
+        "Image lazy loading and pagination",
+        "Message list virtualization (FlatList optimization)",
+        "API response caching with React Query",
+        "Media thumbnail generation and caching",
+        "Database query optimization and indexing",
+        "API response compression (gzip)",
+        "CDN for static assets (if applicable)",
+        "Background sync optimization",
+        "Memory leak detection and fixes"
+      ],
+      "deliverables": [
+        "App loads and scrolls smoothly",
+        "Media loads quickly with thumbnails",
+        "API response times under acceptable thresholds",
+        "No memory leaks or performance regressions"
+      ],
+      "tests": [
+        "Performance benchmarks for key screens",
+        "Load time tests",
+        "Memory profiling tests",
+        "API latency tests"
+      ]
+    },
+    {
+      "id": "phase-14",
+      "name": "Error Handling & User Feedback",
+      "objectives": [
+        "Implement comprehensive error handling",
+        "Provide clear user feedback for all states",
+        "Build retry and recovery mechanisms"
+      ],
+      "technologies": {
+        "mobile": ["React Native", "TypeScript"],
+        "error_tracking": ["Sentry or Bugsnag"],
+        "backend": ["NodeJS", "Express"],
+        "testing": ["Jest"]
+      },
+      "features": [
+        "Global error boundary in React Native",
+        "User-friendly error messages",
+        "Retry mechanisms for failed operations",
+        "Loading states for all async operations",
+        "Empty states for lists and screens",
+        "Network error handling and offline mode messaging",
+        "Error logging and reporting (Sentry)",
+        "Crash reporting",
+        "User feedback forms for issues"
+      ],
+      "deliverables": [
+        "All errors handled gracefully with user feedback",
+        "Users can retry failed operations",
+        "Crashes logged and reported for debugging",
+        "Clear loading and empty states throughout app"
+      ],
+      "tests": [
+        "Error boundary tests",
+        "Retry mechanism tests",
+        "Error logging tests",
+        "User feedback flow tests"
+      ]
+    },
+    {
+      "id": "phase-15",
+      "name": "Testing & Quality Assurance",
+      "objectives": [
+        "Achieve comprehensive test coverage",
+        "Conduct end-to-end testing on real devices",
+        "Perform user acceptance testing (UAT)"
+      ],
+      "technologies": {
+        "mobile": ["React Native", "TypeScript"],
+        "testing": ["Jest", "React Native Testing Library", "Detox (E2E)", "Maestro (E2E alternative)"],
+        "backend": ["Jest", "Supertest"],
+        "ci_cd": ["GitHub Actions or similar"],
+        "device_testing": ["BrowserStack or AWS Device Farm"]
+      },
+      "features": [
+        "Unit tests for all business logic",
+        "Component tests for all UI components",
+        "Integration tests for API endpoints",
+        "E2E tests for critical user flows",
+        "Regression test suite",
+        "Performance tests",
+        "Accessibility tests",
+        "Cross-device testing (iOS/Android, various screen sizes)"
+      ],
+      "deliverables": [
+        "Test coverage above 80% for critical paths",
+        "All E2E tests passing on CI",
+        "UAT completed with stakeholder approval",
+        "Bug backlog triaged and prioritized"
+      ],
+      "tests": [
+        "Full test suite execution in CI",
+        "E2E test scenarios for all major flows",
+        "Performance regression tests",
+        "Accessibility compliance tests"
+      ]
+    },
+    {
+      "id": "phase-16",
+      "name": "Beta Release & Feedback Loop",
+      "objectives": [
+        "Deploy beta version to TestFlight (iOS) and Google Play Beta (Android)",
+        "Gather user feedback and analytics",
+        "Iterate based on real-world usage"
+      ],
+      "technologies": {
+        "mobile": ["React Native", "TypeScript"],
+        "distribution": ["TestFlight", "Google Play Console"],
+        "analytics": ["Firebase Analytics or Mixpanel"],
+        "feedback": ["In-app feedback form", "User surveys"],
+        "monitoring": ["Sentry", "Firebase Crashlytics"]
+      },
+      "features": [
+        "Beta app distribution via TestFlight and Google Play Beta",
+        "Analytics tracking for key user actions",
+        "Crash and error monitoring",
+        "In-app feedback mechanism",
+        "User survey for feature requests and pain points",
+        "A/B testing framework (optional)",
+        "Beta tester communication channel"
+      ],
+      "deliverables": [
+        "Beta app available to testers",
+        "Analytics dashboard showing usage patterns",
+        "Feedback collected and analyzed",
+        "Iteration plan based on beta feedback"
+      ],
+      "tests": [
+        "Beta build verification",
+        "Analytics event tracking tests",
+        "Crash reporting verification"
+      ]
+    },
+    {
+      "id": "phase-17",
+      "name": "Production Launch Preparation",
+      "objectives": [
+        "Finalize app for production release",
+        "Set up production infrastructure and monitoring",
+        "Prepare app store listings and marketing materials"
+      ],
+      "technologies": {
+        "mobile": ["React Native", "TypeScript"],
+        "infrastructure": ["Production Neon database", "Production R2 bucket", "Production backend deployment (Vercel, Railway, or AWS)"],
+        "monitoring": ["Sentry", "Firebase Crashlytics", "Uptime monitoring"],
+        "app_stores": ["App Store Connect", "Google Play Console"]
+      },
+      "features": [
+        "Production environment setup (separate from staging)",
+        "Database backups and disaster recovery plan",
+        "Monitoring and alerting for backend services",
+        "App store screenshots and descriptions",
+        "Privacy policy and terms of service",
+        "App icons and splash screens finalized",
+        "App store optimization (ASO) keywords",
+        "Launch announcement and marketing plan"
+      ],
+      "deliverables": [
+        "Production infrastructure deployed and tested",
+        "App store listings submitted for review",
+        "Monitoring and alerting configured",
+        "Launch checklist completed"
+      ],
+      "tests": [
+        "Production smoke tests",
+        "Disaster recovery drill",
+        "App store submission validation"
+      ]
+    },
+    {
+      "id": "phase-18",
+      "name": "Post-Launch Support & Iteration",
+      "objectives": [
+        "Monitor production stability and performance",
+        "Address critical bugs and user feedback",
+        "Plan and prioritize future features"
+      ],
+      "technologies": {
+        "mobile": ["React Native", "TypeScript"],
+        "monitoring": ["Sentry", "Firebase Analytics", "Crashlytics"],
+        "support": ["Customer support platform (Intercom, Zendesk, or email)"],
+        "project_management": ["Linear, Jira, or GitHub Issues"]
+      },
+      "features": [
+        "24/7 monitoring and on-call rotation",
+        "Hotfix deployment process",
+        "User support channel (email or in-app)",
+        "Feature request tracking",
+        "Bug triage and prioritization",
+        "Regular app updates and releases",
+        "User retention and engagement analysis"
+      ],
+      "deliverables": [
+        "Stable production app with <1% crash rate",
+        "User support SLA defined and met",
+        "Roadmap for next features (e.g., web dashboard, multi-device support)",
+        "Monthly release cadence established"
+      ],
+      "tests": [
+        "Hotfix deployment tests",
+        "Support response time tracking",
+        "User satisfaction metrics"
+      ]
+    }
+  ],
+  "cross_cutting_concerns": {
+    "accessibility": "Ensure WCAG 2.1 AA compliance for all UI components, screen reader support, and sufficient color contrast",
+    "internationalization": "Design with i18n in mind for future multi-language support (use i18next or similar)",
+    "analytics": "Track key metrics: DAU/MAU, message send rate, media upload success rate, retention, invite conversion",
+    "compliance": "GDPR and CCPA compliance for data privacy, user data export/deletion capabilities",
+    "documentation": "Maintain API documentation, architecture decision records (ADRs), and developer onboarding guides"
+  },
+  "infrastructure_recommendations": {
+    "backend_hosting": "Vercel (for serverless API), Railway, Render, or AWS ECS/Fargate",
+    "database": "Neon Postgres with connection pooling (PgBouncer)",
+    "media_storage": "Cloudflare R2 with CDN for faster global access",
+    "monitoring": "Sentry for error tracking, Datadog or New Relic for APM",
+    "ci_cd": "GitHub Actions for automated testing and deployment",
+    "secrets_management": "Environment variables via hosting platform, or AWS Secrets Manager/HashiCorp Vault"
+  },
+  "estimated_timeline": {
+    "phase_0_to_3": "4-6 weeks (mobile foundation and UI)",
+    "phase_4_to_5": "3-4 weeks (backend and database)",
+    "phase_6_to_8": "4-5 weeks (auth, invites, roles)",
+    "phase_9_to_11": "4-5 weeks (sync, notifications, retention)",
+    "phase_12_to_14": "3-4 weeks (security, performance, error handling)",
+    "phase_15_to_16": "3-4 weeks (testing and beta)",
+    "phase_17_to_18": "2-3 weeks (launch prep and post-launch)",
+    "total_estimated": "23-31 weeks (approximately 6-8 months)"
+  },
+  "risks_and_mitigations": {
+    "risk_1": {
+      "risk": "Media upload failures on poor network conditions",
+      "mitigation": "Implement chunked uploads with resume capability, aggressive retry logic, and user feedback"
+    },
+    "risk_2": {
+      "risk": "Scaling issues with real-time sync for many concurrent users",
+      "mitigation": "Use WebSocket connection pooling, implement rate limiting, consider message broker (Redis Pub/Sub) if needed"
+    },
+    "risk_3": {
+      "risk": "R2 storage costs escalate with high media volume",
+      "mitigation": "Implement media compression, set storage quotas per user/chat, monitor usage closely"
+    },
+    "risk_4": {
+      "risk": "Notification delivery unreliable across iOS/Android",
+      "mitigation": "Use established libraries (FCM/APNs), implement fallback polling, test extensively on real devices"
+    },
+    "risk_5": {
+      "risk": "Invite link abuse or spam",
+      "mitigation": "Implement rate limiting on invite creation, expiration times, usage limits, and abuse reporting"
+    }
+  }
+}
