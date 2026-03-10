@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@clerk/clerk-expo';
 import { getDatabase } from '../db/database';
 import {
   getAllChats,
@@ -14,19 +15,19 @@ import { Chat, Message, MessageStatus } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import { messageQueueService } from '../services/messageQueue';
 
-const CURRENT_USER_ID = 'user-1';
-
 export function useDatabase() {
   const [isReady, setIsReady] = useState(false);
+  const { userId } = useAuth();
 
   useEffect(() => {
     async function init() {
       await getDatabase();
-      await seedMockData(CURRENT_USER_ID);
+      // Seed mock data using Clerk user ID or fallback
+      await seedMockData(userId ?? 'user-1');
       setIsReady(true);
     }
     init();
-  }, []);
+  }, [userId]);
 
   return { isReady };
 }
@@ -34,6 +35,7 @@ export function useDatabase() {
 export function useChatList() {
   const [chats, setChats] = useState<(Chat & { lastMessage?: Message })[]>([]);
   const [loading, setLoading] = useState(true);
+  const { userId } = useAuth();
 
   const loadChats = useCallback(async () => {
     try {
@@ -60,7 +62,7 @@ export function useChatList() {
       const chat: Chat = {
         id: uuidv4(),
         name,
-        createdBy: CURRENT_USER_ID,
+        createdBy: userId ?? 'user-1',
         createdAt: now,
         updatedAt: now,
         deletedAt: null,
@@ -78,6 +80,7 @@ export function useChatList() {
 export function useChatMessages(chatId: string) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const { userId } = useAuth();
 
   const loadMessages = useCallback(async () => {
     try {
@@ -108,7 +111,7 @@ export function useChatMessages(chatId: string) {
       const message: Message = {
         id: uuidv4(),
         chatId,
-        senderId: CURRENT_USER_ID,
+        senderId: userId ?? 'user-1',
         content,
         type,
         status: 'pending',

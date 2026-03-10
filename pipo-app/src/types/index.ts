@@ -73,6 +73,9 @@ export interface MediaAttachment {
 }
 
 export type RootStackParamList = {
+  SignIn: undefined;
+  SignUp: undefined;
   ChatList: undefined;
   Chat: { chatId: string; chatName: string };
+  Profile: undefined;
 };
