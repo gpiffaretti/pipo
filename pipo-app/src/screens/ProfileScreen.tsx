@@ -8,7 +8,7 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '@clerk/expo';
 import { getCurrentUser, ApiUser, ApiUsage } from '../services/apiClient';
 
 const FREE_LIMITS = {

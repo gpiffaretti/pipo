@@ -36,7 +36,9 @@
     "plugins": [
       "expo-sqlite",
       "expo-av",
-      "expo-secure-store"
+      "expo-secure-store",
+      "@clerk/expo",
+      "expo-apple-authentication"
     ]
   }
 }

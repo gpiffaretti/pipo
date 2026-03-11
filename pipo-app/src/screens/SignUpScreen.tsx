@@ -8,78 +8,66 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ScrollView,
 } from 'react-native';
-import { useSignUp } from '@clerk/clerk-expo';
+import { useSignUp } from '@clerk/expo';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { registerUser } from '../services/apiClient';
+import { OAuthButtons } from '../components/OAuthButtons';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'SignUp'>;
 };
 
 export function SignUpScreen({ navigation }: Props) {
-  const { isLoaded, signUp, setActive } = useSignUp();
+  const { signUp, errors, fetchStatus } = useSignUp();
   const [displayName, setDisplayName] = useState('');
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
-  const [pendingVerification, setPendingVerification] = useState(false);
   const [code, setCode] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const onSignUpPress = useCallback(async () => {
-    if (!isLoaded || !signUp) return;
-    setLoading(true);
+    const { error } = await signUp.password({
+      emailAddress,
+      password,
+    });
 
-    try {
-      await signUp.create({
-        emailAddress,
-        password,
-      });
-
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-      setPendingVerification(true);
-    } catch (err: unknown) {
-      const error = err as { errors?: Array<{ longMessage?: string }> };
-      const message = error.errors?.[0]?.longMessage || 'Sign up failed. Please try again.';
-      Alert.alert('Error', message);
-    } finally {
-      setLoading(false);
+    if (error) {
+      console.error(JSON.stringify(error, null, 2));
+      return;
     }
-  }, [isLoaded, signUp, emailAddress, password]);
+
+    // Send email verification code
+    if (!error) await signUp.verifications.sendEmailCode();
+  }, [signUp, emailAddress, password]);
 
   const onVerifyPress = useCallback(async () => {
-    if (!isLoaded || !signUp) return;
-    setLoading(true);
+    await signUp.verifications.verifyEmailCode({ code });
 
-    try {
-      const result = await signUp.attemptEmailAddressVerification({ code });
+    if (signUp.status === 'complete') {
+      await signUp.finalize();
 
-      if (result.status === 'complete') {
-        await setActive({ session: result.createdSessionId });
-
-        // Register user in our backend
-        try {
-          await registerUser(emailAddress, displayName || emailAddress.split('@')[0]);
-        } catch {
-          // Backend registration can be retried later
-          console.warn('Backend registration failed, will retry on next app launch');
-        }
-      } else {
-        console.warn('Verification incomplete:', JSON.stringify(result, null, 2));
+      // Register user in our backend
+      try {
+        await registerUser(emailAddress, displayName || emailAddress.split('@')[0]);
+      } catch {
+        // Backend registration can be retried later
+        console.warn('Backend registration failed, will retry on next app launch');
       }
-    } catch (err: unknown) {
-      const error = err as { errors?: Array<{ longMessage?: string }> };
-      const message = error.errors?.[0]?.longMessage || 'Verification failed.';
-      Alert.alert('Error', message);
-    } finally {
-      setLoading(false);
+    } else {
+      console.warn('Sign-up not complete:', signUp.status);
     }
-  }, [isLoaded, signUp, setActive, code, emailAddress, displayName]);
+  }, [signUp, code, emailAddress, displayName]);
 
-  if (pendingVerification) {
+  const loading = fetchStatus === 'fetching';
+
+  // Show verification screen when email needs verification
+  if (
+    signUp.status === 'missing_requirements' &&
+    signUp.unverifiedFields.includes('email_address') &&
+    signUp.missingFields.length === 0
+  ) {
     return (
       <KeyboardAvoidingView
         style={styles.container}
@@ -103,9 +91,12 @@ export function SignUpScreen({ navigation }: Props) {
               onChangeText={setCode}
               keyboardType="number-pad"
             />
+            {errors?.fields?.code && (
+              <Text style={styles.errorText}>{errors.fields.code.message}</Text>
+            )}
 
             <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
+              style={[styles.button, (loading || !code) && styles.buttonDisabled]}
               onPress={onVerifyPress}
               disabled={loading || !code}
               activeOpacity={0.8}
@@ -115,6 +106,14 @@ export function SignUpScreen({ navigation }: Props) {
               ) : (
                 <Text style={styles.buttonText}>Verify</Text>
               )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.resendButton}
+              onPress={() => signUp.verifications.sendEmailCode()}
+              disabled={loading}
+            >
+              <Text style={styles.resendText}>Resend code</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -159,6 +158,9 @@ export function SignUpScreen({ navigation }: Props) {
             keyboardType="email-address"
             autoComplete="email"
           />
+          {errors?.fields?.emailAddress && (
+            <Text style={styles.errorText}>{errors.fields.emailAddress.message}</Text>
+          )}
 
           <TextInput
             style={styles.input}
@@ -169,9 +171,12 @@ export function SignUpScreen({ navigation }: Props) {
             secureTextEntry
             autoComplete="new-password"
           />
+          {errors?.fields?.password && (
+            <Text style={styles.errorText}>{errors.fields.password.message}</Text>
+          )}
 
           <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            style={[styles.button, (loading || !emailAddress || !password) && styles.buttonDisabled]}
             onPress={onSignUpPress}
             disabled={loading || !emailAddress || !password}
             activeOpacity={0.8}
@@ -182,6 +187,8 @@ export function SignUpScreen({ navigation }: Props) {
               <Text style={styles.buttonText}>Sign Up</Text>
             )}
           </TouchableOpacity>
+
+          <OAuthButtons mode="sign-up" />
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Already have an account? </Text>
@@ -272,6 +279,21 @@ const styles = StyleSheet.create({
   footerLink: {
     fontSize: 15,
     color: '#075E54',
+    fontWeight: '600',
+  },
+  errorText: {
+    color: '#d32f2f',
+    fontSize: 12,
+    marginTop: -12,
+    marginBottom: 8,
+  },
+  resendButton: {
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  resendText: {
+    color: '#075E54',
+    fontSize: 15,
     fontWeight: '600',
   },
 });

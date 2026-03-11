@@ -1,5 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
-import { TokenCache } from '@clerk/clerk-expo';
+import { TokenCache } from '@clerk/expo';
 
 export const tokenCache: TokenCache = {
   async getToken(key: string): Promise<string | null> {

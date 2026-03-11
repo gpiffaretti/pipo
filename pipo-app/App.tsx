@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
+import { ClerkProvider, useAuth } from '@clerk/expo';
+import { tokenCache } from '@clerk/expo/token-cache';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { useDatabase } from './src/hooks/useDatabase';
 import { connectivityService } from './src/services/connectivityService';
 import { messageQueueService } from './src/services/messageQueue';
 import { mediaService } from './src/services/mediaService';
-import { tokenCache } from './src/services/tokenCache';
 import { setAuthTokenProvider } from './src/services/apiClient';
 import { CLERK_PUBLISHABLE_KEY } from './src/config/constants';
 

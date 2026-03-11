@@ -11,44 +11,42 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
-import { useSignIn } from '@clerk/clerk-expo';
+import { useSignIn } from '@clerk/expo';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
+import { OAuthButtons } from '../components/OAuthButtons';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'SignIn'>;
 };
 
 export function SignInScreen({ navigation }: Props) {
-  const { signIn, setActive, isLoaded } = useSignIn();
+  const { signIn, errors, fetchStatus } = useSignIn();
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const onSignInPress = useCallback(async () => {
-    if (!isLoaded || !signIn) return;
-    setLoading(true);
+    const { error } = await signIn.password({
+      emailAddress,
+      password,
+    });
 
-    try {
-      const result = await signIn.create({
-        identifier: emailAddress,
-        password,
-      });
-
-      if (result.status === 'complete') {
-        await setActive({ session: result.createdSessionId });
-      } else {
-        console.warn('Sign-in incomplete:', JSON.stringify(result, null, 2));
-        Alert.alert('Sign In', 'Additional verification may be required.');
-      }
-    } catch (err: unknown) {
-      const error = err as { errors?: Array<{ longMessage?: string }> };
-      const message = error.errors?.[0]?.longMessage || 'Sign in failed. Please try again.';
-      Alert.alert('Error', message);
-    } finally {
-      setLoading(false);
+    if (error) {
+      console.error(JSON.stringify(error, null, 2));
+      return;
     }
-  }, [isLoaded, signIn, setActive, emailAddress, password]);
+
+    if (signIn.status === 'complete') {
+      await signIn.finalize();
+    } else if (signIn.status === 'needs_second_factor' || signIn.status === 'needs_client_trust') {
+      Alert.alert('Sign In', 'Additional verification may be required.');
+    } else {
+      console.warn('Sign-in incomplete:', signIn.status);
+      Alert.alert('Sign In', 'Sign-in could not be completed.');
+    }
+  }, [signIn, emailAddress, password]);
+
+  const loading = fetchStatus === 'fetching';
 
   return (
     <KeyboardAvoidingView
@@ -77,6 +75,9 @@ export function SignInScreen({ navigation }: Props) {
             keyboardType="email-address"
             autoComplete="email"
           />
+          {errors?.fields?.identifier && (
+            <Text style={styles.errorText}>{errors.fields.identifier.message}</Text>
+          )}
 
           <TextInput
             style={styles.input}
@@ -87,9 +88,12 @@ export function SignInScreen({ navigation }: Props) {
             secureTextEntry
             autoComplete="password"
           />
+          {errors?.fields?.password && (
+            <Text style={styles.errorText}>{errors.fields.password.message}</Text>
+          )}
 
           <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            style={[styles.button, (loading || !emailAddress || !password) && styles.buttonDisabled]}
             onPress={onSignInPress}
             disabled={loading || !emailAddress || !password}
             activeOpacity={0.8}
@@ -100,6 +104,8 @@ export function SignInScreen({ navigation }: Props) {
               <Text style={styles.buttonText}>Sign In</Text>
             )}
           </TouchableOpacity>
+
+          <OAuthButtons mode="sign-in" />
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Don't have an account? </Text>
@@ -185,5 +191,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#075E54',
     fontWeight: '600',
+  },
+  errorText: {
+    color: '#d32f2f',
+    fontSize: 12,
+    marginTop: -12,
+    marginBottom: 8,
   },
 });
