@@ -1,7 +1,12 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Alert } from 'react-native';
-import { Audio } from 'expo-av';
-import { useState, useRef } from 'react';
+import {
+  useAudioRecorder,
+  useAudioRecorderState,
+  AudioModule,
+  RecordingPresets,
+  setAudioModeAsync,
+} from 'expo-audio';
 import { mediaService } from '../services/mediaService';
 
 interface MediaResult {
@@ -13,8 +18,8 @@ interface MediaResult {
 }
 
 export function useMediaCapture() {
-  const [isRecording, setIsRecording] = useState(false);
-  const recordingRef = useRef<Audio.Recording | null>(null);
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorderState = useAudioRecorderState(audioRecorder);
 
   const pickImage = useCallback(async (): Promise<MediaResult | null> => {
     try {
@@ -68,59 +73,52 @@ export function useMediaCapture() {
     }
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      const status = await AudioModule.requestRecordingPermissionsAsync();
+      if (!status.granted) {
+        Alert.alert('Permission needed', 'Audio recording permission is required');
+      }
+    })();
+  }, []);
+
   const startRecording = useCallback(async (): Promise<void> => {
     try {
-      const permission = await Audio.requestPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert('Permission needed', 'Audio recording permission is required');
-        return;
-      }
-
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
       });
 
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-
-      recordingRef.current = recording;
-      setIsRecording(true);
+      await audioRecorder.prepareToRecordAsync();
+      audioRecorder.record();
     } catch (error) {
       Alert.alert('Error', 'Failed to start recording');
     }
-  }, []);
+  }, [audioRecorder]);
 
   const stopRecording = useCallback(async (): Promise<MediaResult | null> => {
     try {
-      if (!recordingRef.current) return null;
+      await audioRecorder.stop();
 
-      await recordingRef.current.stopAndUnloadAsync();
-      const uri = recordingRef.current.getURI();
-      const status = await recordingRef.current.getStatusAsync();
-
-      recordingRef.current = null;
-      setIsRecording(false);
-
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
+      await setAudioModeAsync({
+        allowsRecording: false,
       });
 
+      const uri = audioRecorder.uri;
       if (!uri) return null;
 
       return {
         uri,
         mimeType: 'audio/m4a',
-        duration: status.durationMillis ? status.durationMillis / 1000 : undefined,
+        duration: recorderState.durationMillis
+          ? recorderState.durationMillis / 1000
+          : undefined,
       };
     } catch (error) {
-      setIsRecording(false);
-      recordingRef.current = null;
       Alert.alert('Error', 'Failed to stop recording');
       return null;
     }
-  }, []);
+  }, [audioRecorder, recorderState.durationMillis]);
 
   return {
     pickImage,
@@ -128,6 +126,6 @@ export function useMediaCapture() {
     takePhoto,
     startRecording,
     stopRecording,
-    isRecording,
+    isRecording: recorderState.isRecording,
   };
 }

@@ -23,24 +23,36 @@ jest.mock('expo-image-picker', () => ({
   launchCameraAsync: jest.fn().mockResolvedValue({ canceled: true, assets: [] }),
 }));
 
-// Mock expo-av
-jest.mock('expo-av', () => ({
-  Audio: {
-    requestPermissionsAsync: jest.fn().mockResolvedValue({ granted: true }),
-    setAudioModeAsync: jest.fn().mockResolvedValue(undefined),
-    Recording: {
-      createAsync: jest.fn().mockResolvedValue({
-        recording: {
-          stopAndUnloadAsync: jest.fn(),
-          getURI: jest.fn().mockReturnValue('file://mock-audio.m4a'),
-          getStatusAsync: jest.fn().mockResolvedValue({ durationMillis: 5000 }),
-        },
-      }),
-    },
-    RecordingOptionsPresets: {
-      HIGH_QUALITY: {},
-    },
+// Mock expo-audio
+jest.mock('expo-audio', () => ({
+  useAudioRecorder: jest.fn(() => ({
+    prepareToRecordAsync: jest.fn().mockResolvedValue(undefined),
+    record: jest.fn(),
+    stop: jest.fn().mockResolvedValue(undefined),
+    uri: 'file://mock-audio.m4a',
+  })),
+  useAudioRecorderState: jest.fn(() => ({
+    isRecording: false,
+    durationMillis: 5000,
+    canRecord: true,
+  })),
+  AudioModule: {
+    requestRecordingPermissionsAsync: jest.fn().mockResolvedValue({ granted: true }),
   },
+  RecordingPresets: {
+    HIGH_QUALITY: {},
+  },
+  setAudioModeAsync: jest.fn().mockResolvedValue(undefined),
+}));
+
+// Mock expo-video
+jest.mock('expo-video', () => ({
+  useVideoPlayer: jest.fn(() => ({
+    play: jest.fn(),
+    pause: jest.fn(),
+    release: jest.fn(),
+  })),
+  VideoView: 'VideoView',
 }));
 
 // Mock expo-file-system
